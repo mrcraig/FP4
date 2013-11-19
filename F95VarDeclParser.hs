@@ -25,7 +25,7 @@ f95_var_decl_parser :: Parser VarDecl
 f95_var_decl_parser = return dummyVarDecl
 {-f95_var_decl_parser = do
   whiteSpace
-  vtype <- type_parser
+  vtype <- try(type_parser) <|> dummyVarType
   comma
   dimension <- dim_parser
   comma
@@ -83,7 +83,19 @@ range_expr =  do
   return $ MkRange st en 
 
 intent_parser :: Parser Intent    
-intent_parser = return dummyIntent
+intent_parser = do
+  symbol "intent("
+  intent_tmp <- stringLiteral
+  char ')'
+  return $ parse_intent intent_tmp
+
+parse_intent :: String -> Intent
+parse_intent intent_str
+  | intent_str == "in" = In
+  | intent_str == "out" = Out
+  | intent_str == "inout" = InOut
+  | otherwise = InOut
+
    
 arglist_parser :: Parser [VarName]    
 arglist_parser = return [dummyVarName]
