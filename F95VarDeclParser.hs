@@ -4,6 +4,7 @@ import Text.ParserCombinators.Parsec hiding (State)
 import Text.ParserCombinators.Parsec.Expr
 import qualified Text.ParserCombinators.Parsec.Token as P
 import Text.ParserCombinators.Parsec.Language
+import Text.Regex.Posix
 
 -- Run a parser p on a string str and print the result
 run_parser_print :: Show a => Parser a -> String -> IO ()
@@ -22,7 +23,7 @@ run_parser p str =  case parse p "" str of
 
 f95_var_decl_parser :: Parser VarDecl
 f95_var_decl_parser = return dummyVarDecl
-f95_var_decl_parser = do
+{-f95_var_decl_parser = do
   whiteSpace
   vtype <- type_parser
   comma
@@ -32,35 +33,54 @@ f95_var_decl_parser = do
   symbol "::"
   varlist <- arglist_parser
   symbol "!$ACC"
-  argmode <- ocl_argmode_parser
+  argmode <- ocl_argmode_parser-}
   
 -- TODO may be broken      
 type_parser :: Parser VarType
 type_parser = do
   varclass <- stringLiteral
-  varkind <- parens
-  varkind' <- integer varkind
-  return $ MkVarType varclass varkind
+  varkind <- integer
+  if varclass =~ "integer"
+    then return $ MkVarType F95Integer varkind
+    else return $ MkVarType F95Real varkind
+
+{-get_type :: String -> NumType
+get_type stringlit
+  | stringlit == "integer" = return $ F95Integer
+  | stringlit == "real" = return $ F95Real
+  | otherwise = error "Type must be Integer or Real"-}
       
 dim_parser :: Parser [Range]
-dim_parser = do
-  
 dim_parser = return [dummyRange]
 
 range_parser :: Parser Range
 range_parser = return dummyRange
 
+-- ie v
 single_var_range :: Parser Range    
-single_var_range = return dummyRange
+single_var_range = do
+  vrange <- var_expr
+  return $ MkRange vrange vrange
 
+-- ie 5
 single_const_range :: Parser Range
-single_const_range = return dummyRange
+single_const_range = do
+  crange <- const_expr
+  return $ MkRange crange crange
 
+-- ie kp+2
 single_expr_range :: Parser Range
-single_expr_range = return dummyRange
+single_expr_range = do
+  erange <- expr_parser
+  return $ MkRange erange erange
 
+-- ie 0:ip+2
 range_expr :: Parser Range    
-range_expr =  return dummyRange
+range_expr =  do
+  st <- expr_parser
+  char ':'
+  en <- expr_parser
+  return $ MkRange st en 
 
 intent_parser :: Parser Intent    
 intent_parser = return dummyIntent
@@ -73,6 +93,7 @@ ocl_argmode_parser = return dummyArgMode
 
 -- Parser for a term in expression as used e.g. in the dimension() attribute. 
 -- This is not a dummy
+-- I don't know why this is here
 term :: Parser Expr
 term = parens expr_parser <|> const_expr <|> var_expr <?> "simple expression"
       
@@ -83,11 +104,15 @@ expr_parser = buildExpressionParser optable term <?> "expression"
 
 -- parser for a constant, e.g. 42
 const_expr :: Parser Expr
-const_expr = return dummyConstExpr
+const_expr = do
+  c <- integer
+  return $ Const c
 
 -- parser for a variable e.g. v
 var_expr :: Parser Expr
-var_expr = return dummyVarExpr
+var_expr =  do
+  e <- identifier
+  return $ Var e
 
 -- I suggest you don't touch the code below. It is not dummy code.
 optable =
