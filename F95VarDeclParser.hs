@@ -22,11 +22,29 @@ run_parser p str =  case parse p "" str of
 
 f95_var_decl_parser :: Parser VarDecl
 f95_var_decl_parser = return dummyVarDecl
-      
+f95_var_decl_parser = do
+  whiteSpace
+  vtype <- type_parser
+  comma
+  dimension <- dim_parser
+  comma
+  intentdef <- intent_parser
+  symbol "::"
+  varlist <- arglist_parser
+  symbol "!$ACC"
+  argmode <- ocl_argmode_parser
+  
+-- TODO may be broken      
 type_parser :: Parser VarType
-type_parser = return dummyVarType
+type_parser = do
+  varclass <- stringLiteral
+  varkind <- parens
+  varkind' <- integer varkind
+  return $ MkVarType varclass varkind
       
 dim_parser :: Parser [Range]
+dim_parser = do
+  
 dim_parser = return [dummyRange]
 
 range_parser :: Parser Range
@@ -100,4 +118,3 @@ stringLiteral   = P.stringLiteral lexer
 comma           = P.comma lexer
 semi            = P.semi lexer
 natural         = P.natural lexer
-
