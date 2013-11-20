@@ -9,5 +9,18 @@ import F95VarDeclParser
 
 -- parse a parameter declaration string into a ParDecl 
 f95_par_decl_parser :: Parser ParDecl
-f95_par_decl_parser = return $ MkParDecl dummyVarType [] dummyVarName dummyExpr
-
+--f95_par_decl_parser = return $ MkParDecl dummyVarType [] dummyVarName dummyExpr
+f95_par_decl_parser = do 
+	vtype <- type_parser
+	char ','
+	whiteSpace
+	symbol "parameter"
+	whiteSpace
+	symbol "::"
+	whiteSpace
+	v <- word
+	whiteSpace
+	char '='
+	whiteSpace
+	c <- expr_parser
+	return $ MkParDecl vtype [] v c
