@@ -22,86 +22,120 @@ run_parser p str =  case parse p "" str of
     Right val  -> val  
 
 f95_var_decl_parser :: Parser VarDecl
-f95_var_decl_parser = return dummyVarDecl
-{-f95_var_decl_parser = do
+--working! yay.
+f95_var_decl_parser = do
   whiteSpace
-  vtype <- try(type_parser) <|> dummyVarType
-  comma
-  dimension <- dim_parser
-  comma
-  intentdef <- intent_parser
+  vtype <- type_parser
+  optionMaybe (char ',')
+  dimension <- option [dummyRange] (try dim_parser)
+  intentdef <- option dummyIntent (try intent_parser)
+  whiteSpace
   symbol "::"
   varlist <- arglist_parser
-  symbol "!$ACC"
-  argmode <- ocl_argmode_parser-}
+  optionMaybe (symbol "!$acc argmode ")
+  argmode <- option dummyArgMode $ ocl_argmode_parser
+  return $ MkVarDecl vtype dimension intentdef varlist argmode True
   
--- TODO may be broken      
+-- working
 type_parser :: Parser VarType
 type_parser = do
-  varclass <- stringLiteral
-  varkind <- integer
+  whiteSpace
+  varclass <- word
+  varkind <- option 4 $ kind_parser
   if varclass =~ "integer"
     then return $ MkVarType F95Integer varkind
     else return $ MkVarType F95Real varkind
 
-{-get_type :: String -> NumType
-get_type stringlit
-  | stringlit == "integer" = return $ F95Integer
-  | stringlit == "real" = return $ F95Real
-  | otherwise = error "Type must be Integer or Real"-}
-      
+-- working, default size 4 if no kind specified
+kind_parser :: Parser Integer
+kind_parser = do
+  whiteSpace
+  symbol "(kind="
+  varkin <- integer
+  char ')'
+  return varkin
+
+--working      
 dim_parser :: Parser [Range]
-dim_parser = return [dummyRange]
+dim_parser = do
+  whiteSpace
+  symbol "dimension("
+  rangelist <- commaSep1 range_parser
+  char ')'
+  return rangelist
 
+--Works
 range_parser :: Parser Range
-range_parser = return dummyRange
+range_parser = try range_expr <|> try single_expr_range <|> try single_const_range <|> try single_var_range <?> error "Could not parse range"
 
--- ie v
+-- ie v (w)
 single_var_range :: Parser Range    
 single_var_range = do
+  whiteSpace
   vrange <- var_expr
   return $ MkRange vrange vrange
 
--- ie 5
+-- ie 5 (w)
 single_const_range :: Parser Range
 single_const_range = do
+  whiteSpace
   crange <- const_expr
   return $ MkRange crange crange
 
--- ie kp+2
+-- ie kp+2 (w)
 single_expr_range :: Parser Range
 single_expr_range = do
+  whiteSpace
   erange <- expr_parser
   return $ MkRange erange erange
 
--- ie 0:ip+2
+-- ie 0:ip+2 (w)
 range_expr :: Parser Range    
 range_expr =  do
+  whiteSpace
   st <- expr_parser
   char ':'
   en <- expr_parser
   return $ MkRange st en 
 
+--Working
 intent_parser :: Parser Intent    
 intent_parser = do
+  whiteSpace
   symbol "intent("
-  intent_tmp <- stringLiteral
+  intent_tmp <- word
   char ')'
   return $ parse_intent intent_tmp
 
+-- (w)
 parse_intent :: String -> Intent
 parse_intent intent_str
   | intent_str == "in" = In
   | intent_str == "out" = Out
   | intent_str == "inout" = InOut
-  | otherwise = InOut
+  | otherwise = error "No valid intent provided"
 
-   
+-- t1,t2,t3 (w)
 arglist_parser :: Parser [VarName]    
-arglist_parser = return [dummyVarName]
+arglist_parser = do
+  whiteSpace
+  arglist <- commaSep1 word
+  return arglist
 
+--Working
 ocl_argmode_parser :: Parser OclArgMode    
-ocl_argmode_parser = return dummyArgMode
+ocl_argmode_parser = do
+  whiteSpace
+  argmod <- word
+  return $ select_argmode argmod 
+
+-- (w)
+select_argmode :: String -> OclArgMode
+select_argmode argmode
+  | argmode == "read" = Read 
+  | argmode == "write" = Write 
+  | argmode == "readwrite" = ReadWrite
+  | otherwise = error "No valid argmode provided"
 
 -- Parser for a term in expression as used e.g. in the dimension() attribute. 
 -- This is not a dummy
@@ -117,12 +151,14 @@ expr_parser = buildExpressionParser optable term <?> "expression"
 -- parser for a constant, e.g. 42
 const_expr :: Parser Expr
 const_expr = do
+  whiteSpace
   c <- integer
   return $ Const c
 
 -- parser for a variable e.g. v
 var_expr :: Parser Expr
 var_expr =  do
+  whiteSpace
   e <- identifier
   return $ Var e
 
