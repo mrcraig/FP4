@@ -1,3 +1,11 @@
+{- 
+Craig Cuthbertson 1002386
+Functional Programming 4
+Parsing, Code Generation and State Manipulation in Haskell: a Real-world Application
+21/11/13
+This code does not currently do anything.
+-}
+
 module Main where
 import F95SrcIO ( read_F95_src, write_F95_src )
 import F95OpenACCParser ( extract_OpenACC_regions_from_F95_src )
@@ -32,6 +40,15 @@ gen_src_name = "module_LES_ocl.f95"
 -- also returns a list of the argument variable names and the constant argument variable names
 parse_arg_decls :: [String] -> [String] -> (ArgTable,[String],[String])
 parse_arg_decls arg_lines const_arg_lines = (H.empty,[],[])
+parse_arg_decls arg_lines const_arg_lines = do
+	--arg lines
+	let r = parse_a_decls arg_lines
+
+parse_a_decls :: [String] -> ArgTable -> (ArgTable,[String])
+parse_a_decls[] = []
+parse_par_decls (x:xs)
+	let res = run_parser f95_var_decl_parser x
+
 
 -- Given the parameter declarations, create a table with as key the parameter name and as value the parsed declaration	
 parse_par_decls :: [String] -> VarTable    

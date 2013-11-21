@@ -1,3 +1,10 @@
+{- 
+Craig Cuthbertson 1002386
+Functional Programming 4
+Parsing, Code Generation and State Manipulation in Haskell: a Real-world Application
+21/11/13
+This code correctly reads and writes files
+-}
 module F95SrcIO (
 		read_F95_src,
         write_F95_src

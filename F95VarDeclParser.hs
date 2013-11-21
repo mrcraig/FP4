@@ -1,3 +1,10 @@
+{- 
+Craig Cuthbertson 1002386
+Functional Programming 4
+Parsing, Code Generation and State Manipulation in Haskell: a Real-world Application
+21/11/13
+This code correctly parses all variations of variable decleration strings. Wasn't sure what vd_is_arg is, so set to True. 
+-}
 module F95VarDeclParser where
 import F95Types
 import Text.ParserCombinators.Parsec hiding (State)

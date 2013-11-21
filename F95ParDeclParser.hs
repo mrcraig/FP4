@@ -1,3 +1,10 @@
+{- 
+Craig Cuthbertson 1002386
+Functional Programming 4
+Parsing, Code Generation and State Manipulation in Haskell: a Real-world Application
+21/11/13
+This code correctly parses a parameter declaration
+-}
 module F95ParDeclParser 
 where
 import F95Types

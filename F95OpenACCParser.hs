@@ -1,3 +1,10 @@
+{- 
+Craig Cuthbertson 1002386
+Functional Programming 4
+Parsing, Code Generation and State Manipulation in Haskell: a Real-world Application
+21/11/13
+This code correctly parses information contained between !$acc blocks. Joining of multiple lines using & is not currently supported.
+-}
 module F95OpenACCParser (
     extract_OpenACC_regions_from_F95_src
 ) where
@@ -17,6 +24,7 @@ extract_args_in :: [String] -> [String]
 extract_args_in [] = error "ACC Arguments not closed"
 extract_args_in (x:xs)
 	| x =~ "!\\$acc end arguments" :: Bool = extract_args xs
+	| x =~ "!" = extract_args_in xs --Deal with comments
 	| otherwise = [x] ++ extract_args_in xs
 
 extract_constargs :: [String] -> [String]
@@ -29,6 +37,7 @@ extract_constargs_in :: [String] -> [String]
 extract_constargs_in [] = error "ACC ConstArguments not closed"
 extract_constargs_in (x:xs)
 	| x =~ "!\\$acc end constarguments" :: Bool = extract_constargs xs
+	| x =~ "!" = extract_constargs_in xs	--Deal with comments
 	| otherwise = [x] ++ extract_constargs_in xs
 
 extract_params :: [String] -> [String]
