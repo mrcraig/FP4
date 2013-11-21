@@ -18,8 +18,11 @@ eval (Op o) vtable = do
 eval (Var v) vtable = do
 	let lookupMaybe = H.lookup v vtable
 	let look = fromJust lookupMaybe
-	let val = eval look vtable
-	(fst(val), vtable)
+	let val = fst(eval look vtable)
+	let upd = Const val
+	let chtab = H.insert v upd vtable
+	(val, vtable)
+
 
 -- Deal with prefix by calling eval_prefix_expr
 eval (Pref p) vtable = do
@@ -29,6 +32,10 @@ eval (Pref p) vtable = do
 -- Closing condition
 eval(Const c) vtable = do
 	(c,vtable)
+
+prod_maybe :: Expr -> Maybe Expr
+prod_maybe ex = Just ex
+
 
 -- given a binary operator expression (e.g. x+y) and the variable lookup table, return the integer value of the evaluated expression
 eval_expr :: OpExpr -> VarTable -> Integer    
