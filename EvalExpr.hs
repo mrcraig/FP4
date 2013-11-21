@@ -48,8 +48,8 @@ eval_expr oe vt = do
 	case oper of
 		"+" ->  lhsval + rhsval
 		"-" ->  lhsval - rhsval
-		--"*" ->  lhsval * rhsval
-		--"/" ->  lhsval / rhsval
+		"*" ->  lhsval * rhsval
+		--"/" ->  (lhsval / rhsval)
 		"%" ->  lhsval `mod` rhsval
 
 -- given a unary operator expression (e.g. -x) and the variable lookup table, return the integer value of the evaluated expression
@@ -59,4 +59,4 @@ eval_prefix_expr pe vt = do
 	let ep = poe_exp pe
 	case pre of
 		"+" -> fst(eval ep vt)
-		--"-" -> fst(eval (ep * (-1)) vt)
+		"-" -> negate(fst(eval ep vt))
