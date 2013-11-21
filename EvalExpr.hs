@@ -1,3 +1,10 @@
+{- 
+Craig Cuthbertson 1002386
+Functional Programming 4
+Parsing, Code Generation and State Manipulation in Haskell: a Real-world Application
+21/11/13
+All works
+-}
 module EvalExpr (eval, VarTable) where
 import F95Types
 import Data.Maybe 
@@ -33,9 +40,6 @@ eval (Pref p) vtable = do
 eval(Const c) vtable = do
 	(c,vtable)
 
-prod_maybe :: Expr -> Maybe Expr
-prod_maybe ex = Just ex
-
 
 -- given a binary operator expression (e.g. x+y) and the variable lookup table, return the integer value of the evaluated expression
 eval_expr :: OpExpr -> VarTable -> Integer    
@@ -49,7 +53,7 @@ eval_expr oe vt = do
 		"+" ->  lhsval + rhsval
 		"-" ->  lhsval - rhsval
 		"*" ->  lhsval * rhsval
-		--"/" ->  (lhsval / rhsval)
+		"/" ->  (quot lhsval rhsval)
 		"%" ->  lhsval `mod` rhsval
 
 -- given a unary operator expression (e.g. -x) and the variable lookup table, return the integer value of the evaluated expression
